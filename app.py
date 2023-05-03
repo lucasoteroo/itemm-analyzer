@@ -46,6 +46,7 @@ if __name__ == '__main__':
     app.run()
 
 
+@app.cli.command("create-user")
 def create_user():
     """Criar um usuario."""
     email = input("Coloque o seu email: ")
