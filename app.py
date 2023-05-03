@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
 def create_user():
     """Criar um usuario."""
-    email = input("Coloque o email: ")
+    email = input("Coloque o seu email: ")
     password = hash_password(input("Coloque o password: "))
     confirm_password = hash_password(input("Coloque o password novamente: "))
     if password != confirm_password:
