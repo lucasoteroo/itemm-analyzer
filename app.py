@@ -1,10 +1,10 @@
 import os
 
 from flask import Flask, render_template_string
-from flask_security import Security, current_user, auth_required, hash_password, \
-    SQLAlchemySessionUserDatastore
+from flask_security import Security, current_user, auth_required, \
+    hash_password, SQLAlchemySessionUserDatastore
 from database import db_session, init_db
-from models import User, Role
+from models.auth import User, Role
 
 # Create app
 app = Flask(__name__)
@@ -28,7 +28,8 @@ app.security = Security(app, user_datastore)
 @app.route("/")
 @auth_required()
 def home():
-    return render_template_string('Hello {{email}} !', email=current_user.email)
+    return render_template_string('Hello {{email}} !',
+                                  email=current_user.email)
 
 
 # one time setup
@@ -43,3 +44,21 @@ with app.app_context():
 if __name__ == '__main__':
     # run application (can also use flask run)
     app.run()
+
+
+def create_user():
+    """Criar um usuario."""
+    email = input("Coloque o email: ")
+    password = hash_password(input("Coloque o password: "))
+    confirm_password = hash_password(input("Coloque o password novamente: "))
+    if password != confirm_password:
+        print("Passwords diferentes")
+        return 1
+    try:
+        app.security.datastore.create_user(
+            email=email, password=password)
+        db_session.commit()
+        print(f"Usuario com email {email} criado com sucesso!")
+    except Exception as e:
+        print("Nao foi possivel criar o usuario.")
+        print(e)
