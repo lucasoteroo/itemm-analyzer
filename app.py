@@ -54,13 +54,13 @@ def pekeurt():
     conn = sqlite3.connect('pet.db')
    
     # Carrega a tabela do banco de dados em um DataFrame do pandas
-    consulta = pd.read_sql_query('SELECT * FROM dados', conn)
+    consultaequalizacaoAm01 = pd.read_sql_query('SELECT * FROM equalizacaoAm01', conn)
 
     # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero, e remove valores duplicados na coluna 'Current'
-    linha_especifica = consulta.loc[(consulta['Voltage'] == '1,750') & (consulta['Current'] != 0)].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
+    linha_especificaequalizacaoAm01 = consultaequalizacaoAm01.loc[(consultaequalizacaoAm01['Voltage'] == '1,750') & (consultaequalizacaoAm01['Current'] != 0)].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
 
     # Converte o formato de hora para número de horas com precisão de 3 casas decimais
-    linha_especifica['StepTime'] = pd.to_timedelta(linha_especifica['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
+    linha_especificaequalizacaoAm01['StepTime'] = pd.to_timedelta(linha_especificaequalizacaoAm01['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
 
     #print("Valores Peukert para o Am 01 (CBI22-076), sendo StepTime(duração) e Current(corrente)")
     #print(" ")
@@ -71,18 +71,52 @@ def pekeurt():
     #-------------------------------------------------------
 
     # Carrega a tabela do banco de dados em um DataFrame do pandas
-    consulta2 = pd.read_sql_query('SELECT * FROM peukert_dados', conn)
+    consultapeukertAm01 = pd.read_sql_query('SELECT * FROM peukertAm01', conn)
 
     # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero, e remove valores duplicados na coluna 'Current'
-    linha_especifica2 = consulta2.loc[(consulta2['Voltage'] == '1,75') & (consulta2['Current'] != 0)].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
+    linha_especificapeukertAm01 = consultapeukertAm01.loc[(consultapeukertAm01['Voltage'] == '1,75') & (consultapeukertAm01['Current'] != 0)].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
 
     # Converte o formato de hora para número de horas com precisão de 3 casas decimais
-    linha_especifica2['StepTime'] = pd.to_timedelta(linha_especifica2['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
+    linha_especificapeukertAm01['StepTime'] = pd.to_timedelta(linha_especificapeukertAm01['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
+
+    # Imprime as linhas selecionadas
+    #print(linha_especifica2)
+
+  #---------------------------------------------------------  
+
+    # Carrega a tabela do banco de dados em um DataFrame do pandas
+    consultaequalizacaoAm02 = pd.read_sql_query('SELECT * FROM equalizacaoAm02', conn)
+
+    # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero, e remove valores duplicados na coluna 'Current'
+    linha_especificaequalizacaoAm02 = consultaequalizacaoAm02.loc[(consultaequalizacaoAm02['Voltage'] == '1,750') & (consultaequalizacaoAm02['Current'] != 0)].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
+
+    # Converte o formato de hora para número de horas com precisão de 3 casas decimais
+    linha_especificaequalizacaoAm02['StepTime'] = pd.to_timedelta(linha_especificaequalizacaoAm02['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
+
+    #print("Valores Peukert para o Am 01 (CBI22-076), sendo StepTime(duração) e Current(corrente)")
+    #print(" ")
+
+    # Imprime as linhas selecionadas
+    #print(linha_especifica)
+
+    #-------------------------------------------------------
+
+    # Carrega a tabela do banco de dados em um DataFrame do pandas
+    consultapeukertAm02 = pd.read_sql_query('SELECT * FROM peukertAm02', conn)
+
+    # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero, e remove valores duplicados na coluna 'Current'
+    linha_especificapeukertAm02 = consultapeukertAm02.loc[(consultapeukertAm02['Voltage'] == '1,75') & (consultapeukertAm02['Current'] != 0)].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
+
+    # Converte o formato de hora para número de horas com precisão de 3 casas decimais
+    linha_especificapeukertAm02['StepTime'] = pd.to_timedelta(linha_especificapeukertAm02['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
 
     # Imprime as linhas selecionadas
     #print(linha_especifica2)
     conn.close()
-    return render_template("pekeurt.html", consulta1=linha_especifica, consulta2=linha_especifica2)
+
+    return render_template("pekeurt.html", consulta1=linha_especificaequalizacaoAm01, 
+                           consulta2=linha_especificapeukertAm01, consulta3=linha_especificaequalizacaoAm02,
+                             consulta4=linha_especificapeukertAm02 )
     
 
 
