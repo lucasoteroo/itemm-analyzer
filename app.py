@@ -174,7 +174,7 @@ def pekeurt():
     # Configurar rótulos e título do gráfico
     plt.xlabel('StepTime')
     plt.ylabel('Current')
-    plt.title('Gráfico de StepTime vs Current')
+    plt.title('Gráfico de StepTime vs Current do am01_CBI22076 e am02_CBI22076')
 
     # Configurar intervalo dos eixos x e y
     plt.ylim(0, 10)  # Define o intervalo do eixo y de 0 a 10
@@ -199,7 +199,7 @@ def pekeurt():
     # Configurar rótulos e título do gráfico
     plt.xlabel('StepTime')
     plt.ylabel('Current')
-    plt.title('Gráfico de StepTime vs Current')
+    plt.title('Gráfico de StepTime vs Current do am05_CBI22077 e am06_CBI22077')
 
     # Configurar intervalo dos eixos x e y
     plt.ylim(0, 10)  # Define o intervalo do eixo y de 0 a 10
