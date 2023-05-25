@@ -213,9 +213,13 @@ def pekeurt():
 
     conn.close()
     
-    return render_template("pekeurt.html", consulta1=am01_CBI22076, 
-                                consulta2=am02_CBI22076, consulta3=am05_CBI22077,
-                                  consulta4=am06_CBI22077)
+    url_imagem1 = '/static/Figure_1.png'
+    url_imagem2 = '/static/Figure_2.png'
+
+    return render_template("pekeurt.html",consulta1=am01_CBI22076, 
+                            consulta2=am02_CBI22076, consulta3=am05_CBI22077,
+                            consulta4=am06_CBI22077, url_imagem1=url_imagem1,
+                            url_imagem2=url_imagem2)
 
 
 
