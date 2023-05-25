@@ -78,6 +78,7 @@ prop_next %}
                         <li class="breadcrumb-item"><a href="#">Home</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Overview</li>
                     </ol>
+                    
                   </nav>
                 
                   <p> Nas tabelas abaixo temos "Current" que diz respeito a corrente de descarga, enquanto "StepTime" é a duração em horas até o step atingir 1,75V na respectiva corrente.</p>
@@ -98,13 +99,12 @@ prop_next %}
 
                     <button class="custom-button" onclick="graficos()">Gráficos</button>
                     <pre id="graficos" style="display: none;">
-                    <p></p>
-                    <img id="imagem1" src="" alt="Imagem 1">
-                    <p></p>
-                    <img id="imagem2" src="" alt="Imagem 2">
-                    <p></p>
+                      <p></p>                    
+                        <img id="imagem1" src="{{ url_for('static', filename='Figure_1.png') }}" alt="Imagem 1" width="800" height="500">              
+                      <p></p>                    
+                         <img id="imagem2" src="{{ url_for('static', filename='Figure_2.png') }}" alt="Imagem 2" width="800" height="500">              
+                      <p></p>                    
                     </pre>
-
 
                   </nav>
                   
@@ -155,10 +155,7 @@ prop_next %}
                     }
 
                   </script>
-                  
-                
-        
-                
+
                 
                 <footer class="pt-5 d-flex justify-content-between">
                     <span>Copyright © 2023 <a href="#">UFRPE</a> e <a href="#">ITEMM</a></span>
