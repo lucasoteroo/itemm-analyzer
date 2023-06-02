@@ -1,7 +1,6 @@
 import os
 from datetime import datetime, timedelta
 import pandas as pd
-import sqlite3
 import matplotlib.pyplot as plt
 
 from flask import Flask, render_template
@@ -51,175 +50,279 @@ def polarizacao():
 @auth_required()
 def pekeurt():
     
-    #------------------AM01--------------------
+        print("------------------- AM01--------------------")
 
-    #conecta ao banco de dados SQLite
-    conn = sqlite3.connect('pet.db')
+        #EQUALIZAÇÃO
 
-     # Carrega a tabela do banco de dados em um DataFrame do pandas
-    consultaequalizacaoAm01 = pd.read_sql_query('SELECT * FROM equalizacaoAm01', conn)
+        # Carrega os dados do arquivo CSV para o DataFrame do pandas
+        consultaequalizacaoAm01 = pd.read_csv('equalizacaoAm01.csv', delimiter=';', on_bad_lines='skip', low_memory=False)
+        # Substitui vírgula por ponto
+        consultaequalizacaoAm01['Voltage'] = consultaequalizacaoAm01['Voltage'].str.replace(',', '.')
+        consultaequalizacaoAm01['Current'] = consultaequalizacaoAm01['Current'].str.replace(',', '.')
+        # Converte a coluna 'Voltage' para float, pulando os valores de string
+        consultaequalizacaoAm01['Voltage'] = pd.to_numeric(consultaequalizacaoAm01['Voltage'], errors='coerce')
+        consultaequalizacaoAm01['Current'] = pd.to_numeric(consultaequalizacaoAm01['Current'], errors='coerce').abs()
 
-     # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero, e remove valores duplicados na coluna 'Current'
-    linha_especificaequalizacaoAm01 = consultaequalizacaoAm01.loc[(consultaequalizacaoAm01['Voltage'] == '1,750') & (consultaequalizacaoAm01['Current'] != 0)].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
-    linha_especificaequalizacaoAm01['Current'] = linha_especificaequalizacaoAm01['Current'].apply(lambda x: abs(float(x.replace(',', '.'))))
+        # Arredonda a coluna 'Voltage' para duas casas decimais
+        consultaequalizacaoAm01['Voltage'] = consultaequalizacaoAm01['Voltage'].round(3)
 
-     # Converte o formato de hora para número de horas com precisão de 3 casas decimais
-    linha_especificaequalizacaoAm01['StepTime'] = pd.to_timedelta(linha_especificaequalizacaoAm01['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
+        # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero
+        linha_especificaequalizacaoAm01 = consultaequalizacaoAm01.loc[(consultaequalizacaoAm01['Voltage'] == 1.750) & (consultaequalizacaoAm01['Step Time'] != 0.000000) & (consultaequalizacaoAm01['Current'] != 0.000)].drop_duplicates(subset=['Current'])
 
+        # Converte o formato de 'Step Time' para horas
+        linha_especificaequalizacaoAm01['Step Time'] = pd.to_timedelta(linha_especificaequalizacaoAm01['Step Time'])
+        linha_especificaequalizacaoAm01['Step Time'] = linha_especificaequalizacaoAm01['Step Time'].dt.total_seconds() / 3600
 
-     # Carrega a tabela do banco de dados em um DataFrame do pandas
-    consultapeukertAm01 = pd.read_sql_query('SELECT * FROM peukertAm01', conn)
+        linha_especificaequalizacaoAm01=(linha_especificaequalizacaoAm01[['Step Time', 'Current']])
 
-     # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero, e remove valores duplicados na coluna 'Current'
+        #PEUKERT
 
-    linha_especificapeukertAm01 = consultapeukertAm01.loc[(consultapeukertAm01['Voltage'] == '1,75') & (consultapeukertAm01['Current'] != 0)].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
-    linha_especificapeukertAm01['Current'] = linha_especificapeukertAm01['Current'].apply(lambda x: abs(float(x.replace(',', '.'))))
+        consultapeukertAm01 = pd.read_csv('peukertAm01.csv', delimiter=';', on_bad_lines='skip', low_memory=False)
+        # Substitui vírgula por ponto
+        consultapeukertAm01['Voltage'] = consultapeukertAm01['Voltage'].str.replace(',', '.')
+        consultapeukertAm01['Current'] = consultapeukertAm01['Current'].str.replace(',', '.')
+        # Converte a coluna 'Voltage' para float, pulando os valores de string
+        consultapeukertAm01['Voltage'] = pd.to_numeric(consultapeukertAm01['Voltage'], errors='coerce')
+        consultapeukertAm01['Current'] = pd.to_numeric(consultapeukertAm01['Current'], errors='coerce').abs()
 
-     # Converte o formato de hora para número de horas com precisão de 3 casas decimais
-    linha_especificapeukertAm01['StepTime'] = pd.to_timedelta(linha_especificapeukertAm01['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
+        # Arredonda a coluna 'Voltage' para duas casas decimais
+        consultapeukertAm01['Voltage'] = consultapeukertAm01['Voltage'].round(3)
 
+        # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero
+        linha_especificapeukertAm01 = consultapeukertAm01.loc[(consultapeukertAm01['Voltage'] == 1.750) & (consultapeukertAm01['Step Time'] != 0.000000) & (consultapeukertAm01['Current'] != 0.000)].drop_duplicates(subset=['Current'])
 
-    am01_CBI22076 = pd.concat([linha_especificaequalizacaoAm01, linha_especificapeukertAm01])
-    print(am01_CBI22076)
+        # Converte o formato de 'Step Time' para horas
+        linha_especificapeukertAm01['Step Time'] = pd.to_timedelta(linha_especificapeukertAm01['Step Time'])
+        linha_especificapeukertAm01['Step Time'] = linha_especificapeukertAm01['Step Time'].dt.total_seconds() / 3600
 
-
-    print("-----------------------------AM02----------------------------")
-
-     # Carrega a tabela do banco de dados em um DataFrame do pandas
-    consultaequalizacaoAm02 = pd.read_sql_query('SELECT * FROM equalizacaoAm02', conn)
-
-     # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero, e remove valores duplicados na coluna 'Current'
-    linha_especificaequalizacaoAm02 = consultaequalizacaoAm02.loc[(consultaequalizacaoAm02['Voltage'] == '1,750') & (consultaequalizacaoAm02['Current'] != 0)].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
-    linha_especificaequalizacaoAm02['Current'] = linha_especificaequalizacaoAm02['Current'].apply(lambda x: abs(float(x.replace(',', '.'))))
-
-     # Converte o formato de hora para número de horas com precisão de 3 casas decimais
-    linha_especificaequalizacaoAm02['StepTime'] = pd.to_timedelta(linha_especificaequalizacaoAm02['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
-
-     # Carrega a tabela do banco de dados em um DataFrame do pandas
-    consultapeukertAm02 = pd.read_sql_query('SELECT * FROM peukertAm02', conn)
-
-     # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero, e remove valores duplicados na coluna 'Current'
-    linha_especificapeukertAm02 = consultapeukertAm02.loc[(consultapeukertAm02['Voltage'] == '1,75') & (consultapeukertAm02['Current'] != 0) & (consultapeukertAm02['Current'] != '0,000')].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
-    linha_especificapeukertAm02['Current'] = linha_especificapeukertAm02['Current'].apply(lambda x: abs(float(x.replace(',', '.'))))
-
-     # Converte o formato de hora para número de horas com precisão de 3 casas decimais
-    linha_especificapeukertAm02['StepTime'] = pd.to_timedelta(linha_especificapeukertAm02['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
-
-    am02_CBI22076 = pd.concat([linha_especificaequalizacaoAm02, linha_especificapeukertAm02])
-    print(am02_CBI22076)
+        linha_especificapeukertAm01=(linha_especificapeukertAm01[['Step Time', 'Current']])
 
 
-    print("---------------AM05--------------------")
+        am01_CBI22076 = pd.concat([linha_especificaequalizacaoAm01, linha_especificapeukertAm01])
+        am01_CBI22076['Step Time'] = am01_CBI22076['Step Time'].round(3)
+        am01_CBI22076['Current'] = am01_CBI22076['Current'].round(3)
+        print(am01_CBI22076)
 
-    # Carrega a tabela do banco de dados em um DataFrame do pandas
-    consultaequalizacaoAm05 = pd.read_sql_query('SELECT * FROM equalizacaoAm05', conn)
+        print("-----------------------------AM02----------------------------")
 
-     # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero, e remove valores duplicados na coluna 'Current'
-    linha_especificaequalizacaoAm05 = consultaequalizacaoAm05.loc[(consultaequalizacaoAm05['Voltage'] == '1,750') & (consultaequalizacaoAm05['Current'] != 0)].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
-    linha_especificaequalizacaoAm05['Current'] = linha_especificaequalizacaoAm05['Current'].apply(lambda x: abs(float(x.replace(',', '.'))))
+        #EQUALIZAÇÃO
 
-     # Converte o formato de hora para número de horas com precisão de 3 casas decimais
-    linha_especificaequalizacaoAm05['StepTime'] = pd.to_timedelta(linha_especificaequalizacaoAm05['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
+        # Carrega os dados do arquivo CSV para o DataFrame do pandas
+        consultaequalizacaoAm02 = pd.read_csv('equalizacaoAm02.csv', delimiter=';', on_bad_lines='skip', low_memory=False)
+        # Substitui vírgula por ponto
+        consultaequalizacaoAm02['Voltage'] = consultaequalizacaoAm02['Voltage'].str.replace(',', '.')
+        consultaequalizacaoAm02['Current'] = consultaequalizacaoAm02['Current'].str.replace(',', '.')
+        # Converte a coluna 'Voltage' para float, pulando os valores de string
+        consultaequalizacaoAm02['Voltage'] = pd.to_numeric(consultaequalizacaoAm02['Voltage'], errors='coerce')
+        consultaequalizacaoAm02['Current'] = pd.to_numeric(consultaequalizacaoAm02['Current'], errors='coerce').abs()
+        # Arredonda a coluna 'Voltage' para duas casas decimais
+        consultaequalizacaoAm02['Voltage'] = consultaequalizacaoAm02['Voltage'].round(3)
 
-     # Carrega a tabela do banco de dados em um DataFrame do pandas
-    consultapeukertAm05 = pd.read_sql_query('SELECT * FROM peukertAm05', conn)
+        # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero
+        linha_especificaequalizacaoAm02 = consultaequalizacaoAm02.loc[(consultaequalizacaoAm02['Voltage'] == 1.750) & (consultaequalizacaoAm02['Step Time'] != 0.000000) & (consultaequalizacaoAm02['Current'] != 0.000)].drop_duplicates(subset=['Current'])
 
-     # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero, e remove valores duplicados na coluna 'Current'
-    linha_especificapeukertAm05 = consultapeukertAm05.loc[(consultapeukertAm05['Voltage'] == '1,75') & (consultapeukertAm05['Current'] != 0) & (consultapeukertAm05['Current'] != '0,000')].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
-    linha_especificapeukertAm05['Current'] = linha_especificapeukertAm05['Current'].apply(lambda x: abs(float(x.replace(',', '.'))))
+        # Converte o formato de 'Step Time' para horas
+        linha_especificaequalizacaoAm02['Step Time'] = pd.to_timedelta(linha_especificaequalizacaoAm02['Step Time'])
+        linha_especificaequalizacaoAm02['Step Time'] = linha_especificaequalizacaoAm02['Step Time'].dt.total_seconds() / 3600
 
-     # Converte o formato de hora para número de horas com precisão de 3 casas decimais
-    linha_especificapeukertAm05['StepTime'] = pd.to_timedelta(linha_especificapeukertAm05['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
+        linha_especificaequalizacaoAm02=(linha_especificaequalizacaoAm02[['Step Time', 'Current']])
 
-    am05_CBI22077 = pd.concat([linha_especificaequalizacaoAm05, linha_especificapeukertAm05])
-    print(am05_CBI22077)
+        #PEUKERT
 
+        consultapeukertAm02 = pd.read_csv('peukertAm02.csv', delimiter=';', on_bad_lines='skip', low_memory=False)
+        # Substitui vírgula por ponto
+        consultapeukertAm02['Voltage'] = consultapeukertAm02['Voltage'].str.replace(',', '.')
+        consultapeukertAm02['Current'] = consultapeukertAm02['Current'].str.replace(',', '.')
+        # Converte a coluna 'Voltage' para float, pulando os valores de string
+        consultapeukertAm02['Voltage'] = pd.to_numeric(consultapeukertAm02['Voltage'], errors='coerce')
+        consultapeukertAm02['Current'] = pd.to_numeric(consultapeukertAm02['Current'], errors='coerce').abs()
+        # Arredonda a coluna 'Voltage' para duas casas decimais
+        consultapeukertAm02['Voltage'] = consultapeukertAm02['Voltage'].round(3)
 
-    print("---------------AM06--------------------")
-
-    # Carrega a tabela do banco de dados em um DataFrame do pandas
-    consultaequalizacaoAm06 = pd.read_sql_query('SELECT * FROM equalizacaoAm06', conn)
-
-     # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero, e remove valores duplicados na coluna 'Current'
-    linha_especificaequalizacaoAm06 = consultaequalizacaoAm06.loc[(consultaequalizacaoAm06['Voltage'] == '1,750') & (consultaequalizacaoAm06['Current'] != 0)].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
-    linha_especificaequalizacaoAm06['Current'] = linha_especificaequalizacaoAm06['Current'].apply(lambda x: abs(float(x.replace(',', '.'))))
-
-     # Converte o formato de hora para número de horas com precisão de 3 casas decimais
-    linha_especificaequalizacaoAm06['StepTime'] = pd.to_timedelta(linha_especificaequalizacaoAm06['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
-
-
-     # Carrega a tabela do banco de dados em um DataFrame do pandas
-    consultapeukertAm06 = pd.read_sql_query('SELECT * FROM peukertAm06', conn)
-
-     # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero, e remove valores duplicados na coluna 'Current'
-    linha_especificapeukertAm06 = consultapeukertAm06.loc[(consultapeukertAm06['Voltage'] == '1,75') & (consultapeukertAm06['Current'] != 0) & (consultapeukertAm06['Current'] != '0,000')].dropna().drop_duplicates(subset=['Current'])[['StepTime', 'Current']]
-    linha_especificapeukertAm06['Current'] = linha_especificapeukertAm06['Current'].apply(lambda x: abs(float(x.replace(',', '.'))))
-
-     # Converte o formato de hora para número de horas com precisão de 3 casas decimais
-    linha_especificapeukertAm06['StepTime'] = pd.to_timedelta(linha_especificapeukertAm06['StepTime']).apply(lambda x: x.total_seconds() / 3600).round(3)
-
-    am06_CBI22077 = pd.concat([linha_especificaequalizacaoAm06, linha_especificapeukertAm06])
-    print(am06_CBI22077)
+        # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero
+        linha_especificapeukertAm02 = consultapeukertAm02.loc[(consultapeukertAm02['Voltage'] == 1.750) & (consultapeukertAm02['Step Time'] != 0.000000) & (consultapeukertAm02['Current'] != 0.000)].drop_duplicates(subset=['Current'])
 
 
-    #----------GRÁFICOS DO AM01 E AM02-------------------
-
-    # Plotar gráfico para linha_especificaequalizacaoAm01
-    plt.scatter(range(len(am01_CBI22076)), am01_CBI22076['Current'], label='am01_CBI22076', marker='o',zorder=2, alpha=1)
-
-    # Plotar gráfico para linha_especificapeukertAm01
-    plt.scatter(list(range(len(am01_CBI22076), len(am01_CBI22076)+len(am02_CBI22076))), am02_CBI22076['Current'], label='am02_CBI22076', marker='o', zorder=2, alpha=0.5)
+        # Filtra as linhas que não são nulas e não possuem o valor '0' na coluna 'Current'
+        linha_especificapeukertAm02 = linha_especificapeukertAm02.dropna(subset=['Current'])
 
 
-    # Configurar rótulos e título do gráfico
-    plt.xlabel('StepTime')
-    plt.ylabel('Current')
-    plt.title('Gráfico de StepTime vs Current do am01_CBI22076 e am02_CBI22076')
+        # Converte o formato de 'Step Time' para horas
+        linha_especificapeukertAm02['Step Time'] = pd.to_timedelta(linha_especificapeukertAm02['Step Time'])
+        linha_especificapeukertAm02['Step Time'] = linha_especificapeukertAm02['Step Time'].dt.total_seconds() / 3600
 
-    # Configurar intervalo dos eixos x e y
-    plt.ylim(0, 10)  # Define o intervalo do eixo y de 0 a 10
+        linha_especificapeukertAm02=(linha_especificapeukertAm02[['Step Time', 'Current']])
 
-    #plt.xticks(am01_CBI22076['StepTime'])
+        am02_CBI22076 = pd.concat([linha_especificaequalizacaoAm02, linha_especificapeukertAm02])
+        am02_CBI22076['Step Time'] = am02_CBI22076['Step Time'].round(3)
+        am02_CBI22076['Current'] = am02_CBI22076['Current'].round(3)
+        print(am02_CBI22076)
 
-    plt.legend('GRÁFICO DO AM01 E AM02')
+        print("-----------------------------AM05----------------------------")
 
-    # Exibir o gráfico
-    plt.show()
+        #EQUALIZAÇÃO
 
-    #----------GRÁFICOS DO AM05 E AM06-------------------
+        # Carrega os dados do arquivo CSV para o DataFrame do pandas
+        consultaequalizacaoAm05 = pd.read_csv('equalizacaoAm05.csv', delimiter=';', on_bad_lines='skip', low_memory=False)
+        # Substitui vírgula por ponto
+        consultaequalizacaoAm05['Voltage'] = consultaequalizacaoAm05['Voltage'].str.replace(',', '.')
+        consultaequalizacaoAm05['Current'] = consultaequalizacaoAm05['Current'].str.replace(',', '.')
+
+        # Converte a coluna 'Voltage' para float, pulando os valores de string
+        consultaequalizacaoAm05['Voltage'] = pd.to_numeric(consultaequalizacaoAm05['Voltage'], errors='coerce')
+        consultaequalizacaoAm05['Current'] = pd.to_numeric(consultaequalizacaoAm05['Current'], errors='coerce').abs()
+        # Arredonda a coluna 'Voltage' para duas casas decimais
+        consultaequalizacaoAm05['Voltage'] = consultaequalizacaoAm05['Voltage'].round(3)
+
+        # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero
+        linha_especificaequalizacaoAm05 = consultaequalizacaoAm05.loc[(consultaequalizacaoAm05['Voltage'] == 1.750) & (consultaequalizacaoAm05['Step Time'] != 0.000000) & (consultaequalizacaoAm05['Current'] != 0.000)].drop_duplicates(subset=['Current'])
+
+        # Converte o formato de 'Step Time' para horas
+        linha_especificaequalizacaoAm05['Step Time'] = pd.to_timedelta(linha_especificaequalizacaoAm05['Step Time'])
+        linha_especificaequalizacaoAm05['Step Time'] = linha_especificaequalizacaoAm05['Step Time'].dt.total_seconds() / 3600
+
+        linha_especificaequalizacaoAm05=(linha_especificaequalizacaoAm05[['Step Time', 'Current']])
+
+        #PEUKERT
+
+        consultapeukertAm05 = pd.read_csv('peukertAm05.csv', delimiter=';', on_bad_lines='skip', low_memory=False)
+        # Substitui vírgula por ponto
+        consultapeukertAm05['Voltage'] = consultapeukertAm05['Voltage'].str.replace(',', '.')
+        consultapeukertAm05['Current'] = consultapeukertAm05['Current'].str.replace(',', '.')
+        # Converte a coluna 'Voltage' para float, pulando os valores de string
+        consultapeukertAm05['Voltage'] = pd.to_numeric(consultapeukertAm05['Voltage'], errors='coerce')
+        consultapeukertAm05['Current'] = pd.to_numeric(consultapeukertAm05['Current'], errors='coerce').abs()
+        # Arredonda a coluna 'Voltage' para duas casas decimais
+        consultapeukertAm05['Voltage'] = consultapeukertAm05['Voltage'].round(3)
+
+        # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero
+        linha_especificapeukertAm05 = consultapeukertAm05.loc[(consultapeukertAm05['Voltage'] == 1.750) & (consultapeukertAm05['Step Time'] != 0.000000) & (consultapeukertAm05['Current'] != 0.000)].drop_duplicates(subset=['Current'])
+
+        # Filtra as linhas que não são nulas e não possuem o valor '0' na coluna 'Current'
+        linha_especificapeukertAm05 = linha_especificapeukertAm05.dropna(subset=['Current'])
+
+        # Converte o formato de 'Step Time' para horas
+        linha_especificapeukertAm05['Step Time'] = pd.to_timedelta(linha_especificapeukertAm05['Step Time'])
+        linha_especificapeukertAm05['Step Time'] = linha_especificapeukertAm05['Step Time'].dt.total_seconds() / 3600
+
+        linha_especificapeukertAm05=(linha_especificapeukertAm05[['Step Time', 'Current']])
+
+        am05_CBI22077 = pd.concat([linha_especificaequalizacaoAm05, linha_especificapeukertAm05])
+        am05_CBI22077['Step Time'] = am05_CBI22077['Step Time'].round(3)
+        am05_CBI22077['Current'] = am05_CBI22077['Current'].round(3)
+        print(am05_CBI22077)
+
+        print("-----------------------------AM06----------------------------")
+
+        #EQUALIZAÇÃO
+
+        # Carrega os dados do arquivo CSV para o DataFrame do pandas
+        consultaequalizacaoAm06 = pd.read_csv('equalizacaoAm06.csv', delimiter=';', on_bad_lines='skip', low_memory=False)
+        # Substitui vírgula por ponto
+        consultaequalizacaoAm06['Voltage'] = consultaequalizacaoAm06['Voltage'].str.replace(',', '.')
+        consultaequalizacaoAm06['Current'] = consultaequalizacaoAm06['Current'].str.replace(',', '.')
+        # Converte as colunas 'Voltage' e 'Current' para float, pulando os valores de string
+        consultaequalizacaoAm06['Voltage'] = pd.to_numeric(consultaequalizacaoAm06['Voltage'], errors='coerce')
+        consultaequalizacaoAm06['Current'] = pd.to_numeric(consultaequalizacaoAm06['Current'], errors='coerce').abs()
+        # Arredonda a coluna 'Voltage' para duas casas decimais
+        consultaequalizacaoAm06['Voltage'] = consultaequalizacaoAm06['Voltage'].round(3)
+
+        # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero
+        linha_especificaequalizacaoAm06 = consultaequalizacaoAm06.loc[(consultaequalizacaoAm06['Voltage'] == 1.750) & (consultaequalizacaoAm06['Step Time'] != 0.000000) & (consultaequalizacaoAm06['Current'] != 0.000)].drop_duplicates(subset=['Current'])
+
+        # Converte o formato de 'Step Time' para horas
+        linha_especificaequalizacaoAm06['Step Time'] = pd.to_timedelta(linha_especificaequalizacaoAm06['Step Time'])
+        linha_especificaequalizacaoAm06['Step Time'] = linha_especificaequalizacaoAm06['Step Time'].dt.total_seconds() / 3600
+
+        linha_especificaequalizacaoAm06 = linha_especificaequalizacaoAm06[['Step Time', 'Current']]
 
 
-    # Plotar gráfico para linha_especificaequalizacaoAm01
-    plt.scatter(range(len(am05_CBI22077)), am05_CBI22077['Current'], label='am05_CBI22077', marker='o',zorder=2, alpha=1)
+        #PEUKERT
 
-    # Plotar gráfico para linha_especificapeukertAm01
-    plt.scatter(list(range(len(am05_CBI22077), len(am05_CBI22077)+len(am06_CBI22077))), am06_CBI22077['Current'], label='am06_CBI22077', marker='o', zorder=2, alpha=0.5)
+        consultapeukertAm06 = pd.read_csv('peukertAm06.csv', delimiter=';', on_bad_lines='skip', low_memory=False)
+        # Substitui vírgula por ponto
+        consultapeukertAm06['Voltage'] = consultapeukertAm06['Voltage'].str.replace(',', '.')
+        consultapeukertAm06['Current'] = consultapeukertAm06['Current'].str.replace(',', '.')
+        # Converte a coluna 'Voltage' para float, pulando os valores de string
+        consultapeukertAm06['Voltage'] = pd.to_numeric(consultapeukertAm06['Voltage'], errors='coerce')
+        consultapeukertAm06['Current'] = pd.to_numeric(consultapeukertAm06['Current'], errors='coerce').abs()
+        consultapeukertAm06['Voltage'] = consultapeukertAm06['Voltage'].round(3)
 
 
-    # Configurar rótulos e título do gráfico
-    plt.xlabel('StepTime')
-    plt.ylabel('Current')
-    plt.title('Gráfico de StepTime vs Current do am05_CBI22077 e am06_CBI22077')
+        # Filtra as linhas que contém o valor desejado, remove as linhas com valores nulos e em que a coluna 'Current' é igual a zero
+        linha_especificapeukertAm06 = consultapeukertAm06.loc[(consultapeukertAm06['Voltage'] == 1.750) & (consultapeukertAm06['Step Time'] != 0.000000) & (consultapeukertAm06['Current'] != 0.000)].drop_duplicates(subset=['Current'])
 
-    # Configurar intervalo dos eixos x e y
-    plt.ylim(0, 10)  # Define o intervalo do eixo y de 0 a 10
+        # Filtra as linhas que não são nulas e não possuem o valor '0' na coluna 'Current'
+        linha_especificapeukertAm06 = linha_especificapeukertAm06.dropna(subset=['Current'])
 
-    #plt.xticks(am01_CBI22076['StepTime'])
+        # Converte o formato de 'Step Time' para horas
+        linha_especificapeukertAm06['Step Time'] = pd.to_timedelta(linha_especificapeukertAm06['Step Time'])
+        linha_especificapeukertAm06['Step Time'] = linha_especificapeukertAm06['Step Time'].dt.total_seconds() / 3600
+        linha_especificapeukertAm06 = linha_especificapeukertAm06[['Step Time','Current']]
 
-    plt.legend()
+        am06_CBI22077 = pd.concat([linha_especificaequalizacaoAm06, linha_especificapeukertAm06])
+        am06_CBI22077['Step Time'] = am06_CBI22077['Step Time'].round(3)
+        print(am06_CBI22077)
 
-    # Exibir o gráfico
-    plt.show()
+'''
+            #----------GRÁFICOS DO AM01 E AM02-------------------
 
-    conn.close()
-    
-    url_imagem1 = '/static/Figure_1.png'
-    url_imagem2 = '/static/Figure_2.png'
+            # Plotar gráfico para linha_especificaequalizacaoAm01
+            plt.scatter(range(len(am01_CBI22076)), am01_CBI22076['Current'], label='am01_CBI22076', marker='o',zorder=2, alpha=1)
 
-    return render_template("pekeurt.html",consulta1=am01_CBI22076, 
-                            consulta2=am02_CBI22076, consulta3=am05_CBI22077,
-                            consulta4=am06_CBI22077, url_imagem1=url_imagem1,
-                            url_imagem2=url_imagem2)
+            # Plotar gráfico para linha_especificapeukertAm01
+            plt.scatter(list(range(len(am01_CBI22076), len(am01_CBI22076)+len(am02_CBI22076))), am02_CBI22076['Current'], label='am02_CBI22076', marker='o', zorder=2, alpha=0.5)
+
+
+            # Configurar rótulos e título do gráfico
+            plt.xlabel('StepTime')
+            plt.ylabel('Current')
+            plt.title('Gráfico de StepTime vs Current do am01_CBI22076 e am02_CBI22076')
+
+            # Configurar intervalo dos eixos x e y
+            plt.ylim(0, 10)  # Define o intervalo do eixo y de 0 a 10
+
+            #plt.xticks(am01_CBI22076['StepTime'])
+
+            plt.legend('GRÁFICO DO AM01 E AM02')
+
+            # Exibir o gráfico
+            plt.show()
+
+            #----------GRÁFICOS DO AM05 E AM06-------------------
+
+
+            # Plotar gráfico para linha_especificaequalizacaoAm01
+            plt.scatter(range(len(am05_CBI22077)), am05_CBI22077['Current'], label='am05_CBI22077', marker='o',zorder=2, alpha=1)
+
+            # Plotar gráfico para linha_especificapeukertAm01
+            plt.scatter(list(range(len(am05_CBI22077), len(am05_CBI22077)+len(am06_CBI22077))), am06_CBI22077['Current'], label='am06_CBI22077', marker='o', zorder=2, alpha=0.5)
+
+
+            # Configurar rótulos e título do gráfico
+            plt.xlabel('StepTime')
+            plt.ylabel('Current')
+            plt.title('Gráfico de StepTime vs Current do am05_CBI22077 e am06_CBI22077')
+
+            # Configurar intervalo dos eixos x e y
+            plt.ylim(0, 10)  # Define o intervalo do eixo y de 0 a 10
+
+            #plt.xticks(am01_CBI22076['StepTime'])
+
+            plt.legend()
+
+            # Exibir o gráfico
+            plt.show()
+
+            conn.close()
+'''
+        url_imagem1 = '/static/Figure_1.png'
+        url_imagem2 = '/static/Figure_2.png'
+
+        return render_template("pekeurt.html",consulta1=am01_CBI22076, 
+                                    consulta2=am02_CBI22076, consulta3=am05_CBI22077,
+                                    consulta4=am06_CBI22077, url_imagem1=url_imagem1,
+                                    url_imagem2=url_imagem2)
 
 
 
